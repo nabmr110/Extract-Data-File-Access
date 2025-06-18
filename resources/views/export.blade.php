@@ -117,7 +117,13 @@
                         @endphp
                         <tr @if($isGrandTotal) style="background-color: #fbdc2e;" @endif>
                             @foreach($row as $cell)
-                                <td>{{ $cell }}</td>
+                                <td>
+                                    @if(is_numeric($cell))
+                                        {{ number_format((float)$cell, 2) }}
+                                    @else
+                                        {{ $cell }}
+                                    @endif
+                                </td>
                             @endforeach
                         </tr>
                     @endif

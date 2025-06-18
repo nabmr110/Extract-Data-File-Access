@@ -162,9 +162,9 @@ try:
                 'Section': 'Grand Total',
                 'TOTAL HC': group['TOTAL HC'].sum(),
                 'ATTN HC': group['ATTN HC'].sum(),
-                'NORMAL HRS': group['NORMAL HRS'].sum(),
-                'OT HRS': group['OT HRS'].sum(),
-                'TOTAL HRS': group['TOTAL HRS'].sum()
+                'NORMAL HRS': round(group['NORMAL HRS'].sum(), 2),
+                'OT HRS': round(group['OT HRS'].sum(), 2),
+                'TOTAL HRS': round(group['TOTAL HRS'].sum(), 2)
             }])
             final_with_totals.append(total_row)
 

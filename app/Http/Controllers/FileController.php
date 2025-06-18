@@ -135,9 +135,45 @@ class FileController extends Controller
         $writer->save('php://output');
         $html = ob_get_clean();
 
+        // Clean and round numbers in HTML (e.g., 274.9199999999999 → 274.92)
+        $html = preg_replace_callback('/\d+\.\d{6,}/', function ($matches) {
+            return number_format((float)$matches[0], 2);
+        }, $html);
+
+        $html = '
+            <style>
+                body {
+                    margin: 0;
+                    padding: 0;
+                    font-family: Arial, sans-serif;
+                }
+                .summary-title {
+                    text-align: center;
+                    font-size: 20px;
+                    margin-bottom: 5px;
+                    font-weight: bold;
+                    page-break-after: avoid; /* Avoid breaking after title */
+                }
+                table {
+                    margin: 0 auto;
+                    width: 100%;
+                    border-collapse: collapse;
+                    font-size: 11px;
+                }
+                th, td {
+                    text-align: center;
+                    padding: 4px;
+                    border: 1px solid #000;
+                }
+            </style>
+            <div class="summary-title">MANPOWER & TOTAL HOURS WORKED SUMMARY</div>
+        ' . $html;
+
+
+
         // Initialize Dompdf
         $options = new Options();
-        $options->set('defaultFont', 'Arial'); 
+        // $options->set('defaultFont', 'Arial'); 
         $dompdf = new Dompdf($options);
         $dompdf->loadHtml($html);
         $dompdf->setPaper('A4', 'portrait');
@@ -145,8 +181,7 @@ class FileController extends Controller
 
         // Save PDF
         $pdfFilename = pathinfo($decodedFilename, PATHINFO_FILENAME) . ".pdf";
-        $outputPath = storage_path("app/processed/" . $pdfFilename);
-        // file_put_contents($outputPath, $dompdf->output());
+        // $outputPath = storage_path("app/processed/" . $pdfFilename);
 
         // Serve the PDF inline
         return Response::make($dompdf->output(), 200, [
@@ -154,7 +189,5 @@ class FileController extends Controller
             'Content-Disposition' => 'inline; filename="'.$pdfFilename.'"'
         ]);
     }
-
-    
 
 }

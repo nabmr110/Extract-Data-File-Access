@@ -81,6 +81,7 @@
                                 <a href="{{ route('download', ['filename' => urlencode(basename($file))]) }}" class="btn btn-success btn-sm ms-2">
                                     Download
                                 </a>
+
                             </td>
                         </tr>
                     @endforeach

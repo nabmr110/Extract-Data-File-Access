@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use Dompdf\Dompdf;
+use Dompdf\Options;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Response;
 use Symfony\Component\Process\Process;
 use Illuminate\Support\Facades\Log;
-use Dompdf\Dompdf;
-use Dompdf\Options;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 
 
@@ -84,7 +84,7 @@ class FileController extends Controller
             'excelData' => $excelData
         ]);
     }
-    
+
     public function download($filename)
     {
         $path = storage_path('app/processed/' . $filename);
@@ -117,6 +117,42 @@ class FileController extends Controller
         }
 
         return redirect()->route('dashboard')->with('success', 'Report regenerated successfully.');
+    }
+
+    public function showReport($filename)
+    {
+        $decodedFilename = urldecode($filename);
+        $inputPath = storage_path("app/processed/" . $decodedFilename);
+
+        if (!file_exists($inputPath)) {
+            abort(404, 'File not found');
+        }
+
+        // Convert Excel to HTML (Required for Dompdf)
+        $spreadsheet = IOFactory::load($inputPath);
+        $writer = IOFactory::createWriter($spreadsheet, 'Html'); 
+        ob_start();
+        $writer->save('php://output');
+        $html = ob_get_clean();
+
+        // Initialize Dompdf
+        $options = new Options();
+        $options->set('defaultFont', 'Arial'); 
+        $dompdf = new Dompdf($options);
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper('A4', 'portrait');
+        $dompdf->render();
+
+        // Save PDF
+        $pdfFilename = pathinfo($decodedFilename, PATHINFO_FILENAME) . ".pdf";
+        $outputPath = storage_path("app/processed/" . $pdfFilename);
+        // file_put_contents($outputPath, $dompdf->output());
+
+        // Serve the PDF inline
+        return Response::make($dompdf->output(), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="'.$pdfFilename.'"'
+        ]);
     }
 
     
